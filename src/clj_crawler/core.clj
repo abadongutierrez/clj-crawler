@@ -1,5 +1,7 @@
 (ns clj-crawler.core
-  (:import (javax.swing JFrame JMenuBar JMenu JMenuItem JPanel JLabel JTextField JComboBox JCheckBox JSeparator JButton)
+  (:import (javax.swing JFrame JMenuBar JMenu JMenuItem JPanel JLabel JTextField JComboBox JCheckBox
+             JSeparator JButton JProgressBar JTable JScrollPane BorderFactory)
+           (javax.swing.table DefaultTableModel)
            (java.awt GridBagConstraints GridBagLayout Insets BorderLayout Font)
            (java.awt.event WindowAdapter ActionListener KeyEvent)))
 
@@ -107,7 +109,47 @@
           :anchor GridBagConstraints/EAST
           :insets (Insets. 5 5 0 0)
           (JLabel. "Crawled URLs:")
-          ))]
+          :fill GridBagConstraints/HORIZONTAL
+          :gridwidth GridBagConstraints/REMAINDER
+          :insets (Insets. 5 5 0 5)
+          (doto (JLabel.)
+            (.setFont (.deriveFont (.getFont (JLabel.)) Font/PLAIN)))
+          :anchor GridBagConstraints/EAST
+          :insets (Insets. 5 5 0 0)
+          (JLabel.)
+          :fill GridBagConstraints/HORIZONTAL
+          :gridwidth GridBagConstraints/REMAINDER
+          :insets (Insets. 5 5 0 5)
+          (doto (JLabel.)
+            (.setFont (.deriveFont (.getFont (JLabel.)) Font/PLAIN)))
+          :anchor GridBagConstraints/EAST
+          :insets (Insets. 5 5 0 0)
+          (JLabel. "Crawling Process:")
+          :fill GridBagConstraints/HORIZONTAL
+          :gridwidth GridBagConstraints/REMAINDER
+          :insets (Insets. 5 5 0 5)
+          (doto (JProgressBar.)
+            (.setMinimum 0)
+            (.setStringPainted true))
+          :anchor GridBagConstraints/EAST
+          :insets (Insets. 5 5 10 0)
+          (JLabel. "Search Matches:")
+          :fill GridBagConstraints/HORIZONTAL
+          :gridwidth GridBagConstraints/REMAINDER
+          :insets (Insets. 5 5 10 5)
+          (doto (JLabel.)
+            (.setFont (.deriveFont (.getFont (JLabel.)) Font/PLAIN)))))]
+    panel))
+
+(defn create-table []
+  (JTable. (proxy [DefaultTableModel] [(to-array-2d []) (to-array ["URL"])] (isCellEditable [row, colum] false))))
+
+(defn create-matches-panel []
+  (let [panel
+    (doto (JPanel.)
+      (.setBorder (BorderFactory/createTitledBorder "Matches"))
+      (.setLayout (BorderLayout.))
+      (.add (JScrollPane. (create-table)) BorderLayout/CENTER))]
     panel))
 
 (defn start []
@@ -118,6 +160,7 @@
     ;; search panel
     (.setLayout (.getContentPane frame) (BorderLayout.))
     (.add (.getContentPane frame) (create-search-panel) BorderLayout/NORTH)
+    (.add (.getContentPane frame) (create-matches-panel) BorderLayout/CENTER)
     (.show frame)))
 
 (defn -main [& args]
