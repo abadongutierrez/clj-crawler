@@ -3,13 +3,52 @@
              JSeparator JButton JProgressBar JTable JScrollPane BorderFactory)
            (javax.swing.table DefaultTableModel)
            (java.awt GridBagConstraints GridBagLayout Insets BorderLayout Font)
-           (java.awt.event WindowAdapter ActionListener KeyEvent)))
+           (java.awt.event WindowAdapter ActionListener KeyEvent)
+           (java.net URL))
+  (:require [clojure.string :as str]))
+
+(def crawling (atom false))
+
+(defn update-crawling! [new-value]
+  (reset! crawling new-value))
 
 (defn action-exit []
   (System/exit 0))
 
-(defn action-search []
-  (System/exit 0))
+(defn verify-url
+  [url]
+  (if (.startsWith (.toLowerCase url) "http://")
+    (try (URL. url) (catch Exception e nil))
+    nil))
+
+(defn validate-start-url
+  [start-url]
+  (if (str/blank? start-url)
+    ["Missing Start URL."]
+    (if (nil? (verify-url start-url))
+      ["Invalid Start URL"]
+      [])))7
+
+(defn validate-max-urls
+  [max-urls]
+  (if-not (str/blank? max-urls)
+    (let [max (try (Integer/parseInt max-urls) (catch NumberFormatException e 0))]
+      (if (< max 1) ["Invalid Max URLs value."] []))
+    []))
+
+(defn validate-search-input
+  [start-url max-urls]
+  (let [error-list []
+        url-error-list (validate-start-url start-url)
+        max-urls-error-list (validate-max-urls max-urls)]
+    ))
+
+(defn continue-action-search
+  [start-url-textfield max-combobox]
+  (validate-search-input (.trim (.getText start-url-textfield)) (.trim (.getSelectedItem max-combobox))))
+
+(defn action-search [start-url-textfield max-combobox]
+  (if (@crawling) (update-crawling! false) (continue-action-search start-url-textfield max-combobox)))
 
 (defn create-menu []
   (let [menu-bar (JMenuBar.)
@@ -51,7 +90,10 @@
                     (next body)))))))))
 
 (defn create-search-panel []
-  (let [panel 
+  (let [start-url-textfield (JTextField.)
+        max-combobox (doto (JComboBox. (to-array ["50" "100"]))
+                       (.setEditable true))
+        panel 
       (doto (JPanel. (GridBagLayout.))
         (grid-bag-layout
           :anchor GridBagConstraints/EAST
@@ -60,13 +102,12 @@
           :fill GridBagConstraints/HORIZONTAL
           :gridwidth GridBagConstraints/REMAINDER
           :insets (Insets. 5 5 0 5)
-          (JTextField.)
+          start-url-textfield
           :anchor GridBagConstraints/EAST
           :insets (Insets. 5 5 0 0)
           (JLabel. "Max URLs to Crawl:")
           :insets (Insets. 5 5 0 0)
-          (doto (JComboBox. (to-array ["50" "100"]))
-            (.setEditable true))
+          max-combobox
           :anchor GridBagConstraints/WEST
           :insets (Insets. 0 10 0 0)
           (JCheckBox. "Limit crawling to Start URL site")
@@ -93,7 +134,7 @@
           :gridwidth GridBagConstraints/REMAINDER
           :insets (Insets. 5 5 5 5)
           (doto (JButton. "Search")
-            (.addActionListener (proxy [ActionListener] [] (actionPerformed [event] (action-search)))))
+            (.addActionListener (proxy [ActionListener] [] (actionPerformed [event] (action-search start-url-textfield max-combobox)))))
           :fill GridBagConstraints/HORIZONTAL
           :gridwidth GridBagConstraints/REMAINDER
           :insets (Insets. 5 5 5 5)
